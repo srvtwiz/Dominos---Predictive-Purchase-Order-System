@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from warnings import filterwarnings
+import matplotlib.pyplot as plt
+import seaborn as sns
 filterwarnings('ignore')
 
 # Load the data
@@ -62,7 +64,7 @@ sale['pizza_name_id'] = sale['pizza_name_id'].str.lower()
 print(sale)
 
 sale['order_date'] = pd.to_datetime(sale['order_date'])
-sale_agg = sale.groupby(['order_date', 'pizza_name_id','pizza_size','pizza_name','pizza_category','unit_price']).agg({'quantity': 'sum',}).reset_index()
+sale_agg = sale.groupby(['order_date', 'pizza_name_id','pizza_size','pizza_name','pizza_category','unit_price','total_price']).agg({'quantity': 'sum',}).reset_index()
 
 
 # Calculate Z-scores for the 'quantity' column
@@ -120,3 +122,76 @@ daily_sales = sale_filtered.groupby('order_date')['quantity'].sum().reset_index(
 daily_sales
 
 print(sale_filtered)
+
+
+
+
+# Ploting sales over time
+sales_over_time = sale_filtered.groupby('order_date')['total_price'].sum().reset_index()
+
+plt.figure(figsize=(12,6))
+sns.lineplot(data=sales_over_time, x='order_date', y='total_price')
+plt.title('Total Sales Over Time')
+plt.xlabel('Date')
+plt.ylabel('Total Sales')
+plt.xticks(rotation=45)
+plt.show()
+
+
+# Aggregate sales by pizza name
+pizza_sales = sale_filtered.groupby('pizza_name')['quantity'].sum().reset_index()
+
+# Sorting by quantity sold
+pizza_sales = pizza_sales.sort_values(by='quantity', ascending=False)
+
+# Ploting top 10 most popular pizzas
+plt.figure(figsize=(12,6))
+sns.barplot(data=pizza_sales.head(10), x='quantity', y='pizza_name', palette='viridis')
+plt.title('Top 10 Most Popular Pizzas')
+plt.xlabel('Quantity Sold')
+plt.ylabel('Pizza Name')
+plt.show()
+
+
+# Ploting pizza size distribution
+size_sales = sale_filtered.groupby('pizza_size')['quantity'].sum().reset_index()
+
+plt.figure(figsize=(8,5))
+sns.barplot(data=size_sales, x='pizza_size', y='quantity', palette='coolwarm')
+plt.title('Sales by Pizza Size')
+plt.xlabel('Pizza Size')
+plt.ylabel('Quantity Sold')
+plt.show()
+
+
+# Ploting pizza category distribution
+category_sales = sale_filtered.groupby('pizza_category')['quantity'].sum().reset_index()
+
+plt.figure(figsize=(8,5))
+sns.barplot(data=category_sales, x='pizza_category', y='quantity', palette='coolwarm')
+plt.title('Sales by Pizza Category')
+plt.xlabel('Pizza Category')
+plt.ylabel('Quantity Sold')
+plt.show()
+
+
+# Aggregate sales by month
+sales_by_month = sale_filtered.groupby('month')['total_price'].sum().reset_index()
+
+# Plot sales by month
+plt.figure(figsize=(10,5))
+sns.barplot(data=sales_by_month, x='month', y='total_price', palette='magma')
+plt.title('Sales by Month')
+plt.xlabel('Month')
+plt.ylabel('Total Sales')
+plt.show()
+
+
+# Correlation matrix
+corr_matrix = sale_filtered[['quantity', 'unit_price', 'total_price']].corr()
+
+# Plot heatmap
+plt.figure(figsize=(8,6))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title('Correlation Matrix')
+plt.show()
